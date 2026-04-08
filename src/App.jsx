@@ -10,6 +10,8 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const API_BASE = 'https://api.alowork.com';
+
   // Fetch payments on component mount
   useEffect(() => {
     fetchPayments();
@@ -17,7 +19,7 @@ export default function App() {
 
   const fetchPayments = async () => {
     try {
-      const response = await fetch('/local/sepay/payments');
+      const response = await fetch(`${API_BASE}/local/sepay/payments`);
       if (response.ok) {
         const data = await response.json();
         setHistory(data.payments);
@@ -37,7 +39,7 @@ export default function App() {
     setLoading(true);
 
     try {
-      const response = await fetch('/local/sepay/makeQrCode', {
+      const response = await fetch(`${API_BASE}/local/sepay/makeQrCode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, senderName, bankAccount, bankName }),
