@@ -17,7 +17,7 @@ export default function App() {
 
   const fetchPayments = async () => {
     try {
-      const response = await fetch('/sepay/payments');
+      const response = await fetch('/local/sepay/payments');
       if (response.ok) {
         const data = await response.json();
         setHistory(data.payments);
@@ -37,7 +37,7 @@ export default function App() {
     setLoading(true);
 
     try {
-      const response = await fetch('/sepay/makeQrCode', {
+      const response = await fetch('/local/sepay/makeQrCode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, senderName, bankAccount, bankName }),
