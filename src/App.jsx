@@ -160,13 +160,13 @@ export default function App() {
               {qrUrl && (
                 <div className="qr-code-section">
                   <strong>Mã QR:</strong>
-                  <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="qr-code-link">
+                  {/* <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="qr-code-link"> */}
                     <img 
                       src={qrUrl} 
                       alt="QR Code" 
                       className="qr-code-img"
                     />
-                  </a>
+                  {/* </a> */}
                   <small className="qr-hint">Nhấn để xem QR code trực tuyến</small>
                 </div>
               )}
