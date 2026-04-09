@@ -1,11 +1,97 @@
-import { useState, useEffect } from 'react';
-import {QRCode} from 'react-qr-code'; // <-- import default
+import { useState, useEffect, useMemo } from 'react';
+import { QRCode } from 'react-qr-code';
 
+// ================= QR COMPONENT =================
 function TingeeQR({ qrCode, size = 256 }) {
-  if (!qrCode) return null; // tránh render khi chưa có QR code
+  if (!qrCode) return null;
   return <QRCode value={qrCode} size={size} />;
 }
 
+// ================= VIETNAM BANK LIST =================
+const VIETNAM_BANKS = [
+  "Vietcombank (VCB)",
+  "BIDV",
+  "VietinBank",
+  "Agribank",
+  "MB Bank",
+  "Techcombank (TCB)",
+  "ACB",
+  "VPBank",
+  "TPBank",
+  "Sacombank",
+  "SHB",
+  "HDBank",
+  "OCB",
+  "Eximbank",
+  "MSB",
+  "SeABank",
+  "Nam A Bank",
+  "VIB",
+  "PVcomBank",
+  "KienlongBank",
+  "ABBANK",
+  "NCB",
+  "Saigonbank",
+  "BaoViet Bank",
+  "CBBank",
+  "VRB",
+  "Public Bank VN"
+];
+
+// ================= CLEAN & VALIDATE =================
+function cleanSenderName(name) {
+  if (!name) return '';
+
+  return name
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toUpperCase();
+}
+
+function isValidName(name) {
+  if (!name) return false;
+
+  const words = name.split(' ').filter(Boolean);
+
+  // 2–5 từ là hợp lý
+  if (words.length < 2 || words.length > 5) return false;
+
+  // chặn noise spam
+  const noise = ['TEST', 'ABC', 'XYZ', 'QWE', 'ASD', 'ZXC', 'AAAA', 'BBBB'];
+
+  // mỗi từ hợp lệ:
+  const isValidWord = (w) => {
+    // cho phép:
+    // - 1 ký tự (A, B, C...)
+    // - hoặc >= 2 ký tự chữ
+    return /^[A-Z]$/.test(w) || /^[A-Z]{2,}$/.test(w);
+  };
+
+  // check word validity
+  if (!words.every(isValidWord)) return false;
+
+  // check noise words
+  if (words.some(w => noise.includes(w))) return false;
+
+  // tránh toàn chữ giống nhau (AAAA AAAA)
+  const unique = new Set(words);
+  if (unique.size === 1) return false;
+
+  return true;
+}
+
+function cleanBankAccount(acc) {
+  return acc.replace(/\D/g, '');
+}
+
+function isValidAccount(acc) {
+  return /^\d{6,20}$/.test(acc);
+}
+
+// ================= APP =================
 export default function App() {
   const [senderName, setSenderName] = useState('');
   const [bankAccount, setBankAccount] = useState('');
@@ -16,9 +102,8 @@ export default function App() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // const API_BASE = 'http://localhost:3000';
   const API_BASE = 'https://api.alowork.com';
-  
+
   useEffect(() => {
     fetchPayments();
   }, []);
@@ -35,16 +120,45 @@ export default function App() {
     }
   };
 
+  // ================= HANDLE SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!senderName || !bankAccount || !bankName || !amount) return;
+
+    const cleanName = cleanSenderName(senderName);
+    const cleanAcc = cleanBankAccount(bankAccount);
+
+    if (!isValidName(cleanName)) {
+      alert('Tên không hợp lệ (2-5 từ, không ký tự lạ)');
+      return;
+    }
+
+    if (!isValidAccount(cleanAcc)) {
+      alert('Số tài khoản không hợp lệ');
+      return;
+    }
+
+    if (!bankName) {
+      alert('Vui lòng chọn ngân hàng');
+      return;
+    }
+
+    if (!amount || Number(amount) <= 0) {
+      alert('Số tiền không hợp lệ');
+      return;
+    }
 
     setLoading(true);
+
     try {
       const response = await fetch(`${API_BASE}/tingee/makeQrCode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount, senderName, bankAccount, bankName }),
+        body: JSON.stringify({
+          amount: Number(amount),
+          senderName: cleanName,
+          bankAccount: cleanAcc,
+          bankName
+        }),
       });
 
       if (!response.ok) {
@@ -54,9 +168,11 @@ export default function App() {
 
       const p = await response.json();
       const newPayment = p.data;
+
       setPayment(newPayment);
-      setQrUrl(String(newPayment.qrCode)); // <-- ép kiểu string
+      setQrUrl(String(newPayment.qrCode));
       setHistory([newPayment, ...history]);
+
     } catch (err) {
       alert(err.message);
     } finally {
@@ -64,45 +180,34 @@ export default function App() {
     }
   };
 
+  // ================= UI =================
   return (
     <div className="page-shell">
       <header className="hero">
-        <div>
-          <span className="eyebrow">
-            Hệ thống điều phối chuyển khoản ngân hàng bảo mật
-          </span>
-          <h1>
-            Nền tảng thanh toán SePay với VA động, QR hết hạn và đối soát giao dịch.
-          </h1>
-          <p>
-            Luồng thanh toán được thiết kế sẵn cho môi trường thực tế: Tài khoản
-            ảo riêng theo từng đơn hàng tùy biến tên người nhận, đếm ngược 15/30
-            phút, webhook xác thực và lưu vết đầy đủ payload phục vụ đối soát.
-          </p>
-        </div>
+        <span className="eyebrow">
+          Hệ thống QR chuyển khoản ngân hàng
+        </span>
       </header>
 
       <main className="main-grid">
         <section className="card form-card">
           <div className="card-title">Tạo phiếu thanh toán</div>
-          <div className="card-subtitle">Phiên chuyển khoản SePay</div>
 
           <form onSubmit={handleSubmit} className="form-grid">
+
             <label>
-              <span>Tên người chuyển khoản</span>
+              <span>Tên người chuyển (giống tên tài khoản ngân hàng)</span>
               <input
-                type="text"
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
-                placeholder="Nhập tên người chuyển khoản"
+                placeholder="NGUYEN VAN A"
                 required
               />
             </label>
 
             <label>
-              <span>Tài khoản ngân hàng</span>
+              <span>Số tài khoản</span>
               <input
-                type="text"
                 value={bankAccount}
                 onChange={(e) => setBankAccount(e.target.value)}
                 placeholder="Nhập số tài khoản"
@@ -111,118 +216,138 @@ export default function App() {
             </label>
 
             <label>
-              <span>Tên ngân hàng</span>
-              <input
-                type="text"
+              <span>Ngân hàng</span>
+              <BankDropdown
                 value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                placeholder="Nhập tên ngân hàng"
-                required
+                onChange={setBankName}
               />
             </label>
 
             <label>
-              <span>Số tiền cần chuyển</span>
+              <span>Số tiền</span>
               <input
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Nhập số tiền cần chuyển"
                 required
               />
             </label>
 
-            <button type="submit" className="btn-primary" disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Tạo phiếu thanh toán'}
+            <button disabled={loading}>
+              {loading ? 'Đang xử lý...' : 'Tạo QR'}
             </button>
+
           </form>
         </section>
 
         <section className="card summary-card">
-          <div className="small-label">Phiên thanh toán</div>
           {!payment ? (
-            <div className="summary-placeholder">
-              Chưa có phiên nào được tạo.
-            </div>
+            <div>Chưa có phiên</div>
           ) : (
-            <div className="summary-detail">
-              <div>
-                <strong>Tên người chuyển:</strong> <span>{payment.senderName}</span>
-              </div>
-              <div>
-                <strong>Tài khoản ngân hàng:</strong> <span>{payment.bankAccount}</span>
-              </div>
-              <div>
-                <strong>Tên ngân hàng:</strong> <span>{payment.bankName}</span>
-              </div>
-              <div>
-                <strong>Số tiền:</strong>{' '}
-                <span>{payment.amount.toLocaleString()} VND</span>
-              </div>
+            <>
+              <div>{payment.senderName}</div>
+              <div>{payment.bankAccount}</div>
+              <div>{payment.bankName}</div>
+              <div>{payment.amount.toLocaleString()} VND</div>
 
-              {qrUrl && (
-                <div className="qr-code-section">
-                  <strong>Mã QR:</strong>
-                  <TingeeQR qrCode={qrUrl} size={200} />
-                  <small className="qr-hint">Nhấn để xem QR code trực tuyến</small>
-                </div>
-              )}
-            </div>
+              {qrUrl && <TingeeQR qrCode={qrUrl} size={200} />}
+            </>
           )}
         </section>
       </main>
+    </div>
+  );
+}
 
-      <section className="history-card card">
-        <div className="history-header">
-          <div>
-            <p className="small-label">Đối soát</p>
-            <h2>Thông tin người chuyển tiền đã nhận</h2>
-          </div>
-        </div>
 
-        <div className="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Đơn hàng</th>
-                <th>TK chuyển</th>
-                <th>Tên người chuyển</th>
-                <th>Nội dung chuyển khoản</th>
-                <th>Tên ngân hàng</th>
-                <th>Số tiền muốn chuyển</th>
-                <th>Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody>
-              {history.length === 0 ? (
-                <tr>
-                  <td colSpan="7" className="empty-row">
-                    Chưa có phiên nào được tạo.
-                  </td>
-                </tr>
-              ) : (
-                history.map((item) => (
-                  <tr key={item.id}>
-                    <td>{item.id}</td>
-                    <td>{item.bankAccount}</td>
-                    <td>{item.senderName}</td>
-                    <td>{item.transferContent}</td>
-                    <td>{item.bankName}</td>
-                    <td>{item.amount.toLocaleString()} VND</td>
-                    <td
-                      className={`status-${
-                        item.status === 'Đã thanh toán' ? 'paid' : 'pending'
-                      }`}
-                    >
-                      {item.status}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+
+function BankDropdown({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredBanks = useMemo(() => {
+    return VIETNAM_BANKS.filter(bank =>
+      bank.toLowerCase().includes(search.toLowerCase())
+    );
+  }, [search]);
+
+  return (
+    <div style={{ position: "relative" }}>
+
+      {/* INPUT DISPLAY */}
+      <div
+        onClick={() => setOpen(!open)}
+        style={{
+          padding: "10px",
+          border: "1px solid #ccc",
+          borderRadius: 8,
+          cursor: "pointer",
+          background: "#fff"
+        }}
+      >
+        {value || "Chọn ngân hàng"}
+      </div>
+
+      {/* DROPDOWN */}
+      {open && (
+        <div
+          style={{
+            position: "absolute",
+            top: "110%",
+            left: 0,
+            right: 0,
+            border: "1px solid #ddd",
+            borderRadius: 8,
+            background: "#fff",
+            zIndex: 999,
+            maxHeight: 250,
+            overflowY: "auto",
+            boxShadow: "0 8px 20px rgba(0,0,0,0.1)"
+          }}
+        >
+
+          {/* SEARCH */}
+          <input
+            autoFocus
+            placeholder="Tìm ngân hàng..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            style={{
+              width: "100%",
+              padding: "8px",
+              border: "none",
+              borderBottom: "1px solid #eee",
+              outline: "none"
+            }}
+          />
+
+          {/* LIST */}
+          {filteredBanks.map((bank, idx) => (
+            <div
+              key={idx}
+              onClick={() => {
+                onChange(bank);
+                setOpen(false);
+                setSearch("");
+              }}
+              style={{
+                padding: "10px",
+                cursor: "pointer",
+                borderBottom: "1px solid #f5f5f5"
+              }}
+            >
+              {bank}
+            </div>
+          ))}
+
+          {filteredBanks.length === 0 && (
+            <div style={{ padding: 10, color: "#999" }}>
+              Không tìm thấy ngân hàng
+            </div>
+          )}
+
         </div>
-      </section>
+      )}
     </div>
   );
 }
