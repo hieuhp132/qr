@@ -1,25 +1,30 @@
 import { useState, useEffect } from 'react';
+import {QRCode} from 'react-qr-code'; // <-- import default
+
+function TingeeQR({ qrCode, size = 256 }) {
+  if (!qrCode) return null; // tránh render khi chưa có QR code
+  return <QRCode value={qrCode} size={size} />;
+}
 
 export default function App() {
   const [senderName, setSenderName] = useState('');
   const [bankAccount, setBankAccount] = useState('');
   const [bankName, setBankName] = useState('');
-    const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState('');
   const [payment, setPayment] = useState(null);
   const [qrUrl, setQrUrl] = useState(null);
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  const API_BASE = 'https://api.alowork.com';
+  const API_BASE = 'http://localhost:3000';
 
-  // Fetch payments on component mount
   useEffect(() => {
     fetchPayments();
   }, []);
 
   const fetchPayments = async () => {
     try {
-      const response = await fetch(`${API_BASE}/local/sepay/payments`);
+      const response = await fetch(`${API_BASE}/tingee/payments`);
       if (response.ok) {
         const data = await response.json();
         setHistory(data.payments);
@@ -31,15 +36,11 @@ export default function App() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!senderName || !bankAccount || !bankName) {
-      return;
-    }
+    if (!senderName || !bankAccount || !bankName || !amount) return;
 
     setLoading(true);
-
     try {
-      const response = await fetch(`${API_BASE}/local/sepay/makeQrCode`, {
+      const response = await fetch(`${API_BASE}/tingee/makeQrCode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount, senderName, bankAccount, bankName }),
@@ -50,18 +51,11 @@ export default function App() {
         throw new Error(error?.error || 'Lỗi khi tạo phiếu thanh toán');
       }
 
-      const data = await response.json();
-      console.log('Payment created:', data);
-      const newPayment = data.payment;
-
+      const p = await response.json();
+      const newPayment = p.data;
       setPayment(newPayment);
-      setQrUrl(data.qrUrl);
+      setQrUrl(String(newPayment.qrCode)); // <-- ép kiểu string
       setHistory([newPayment, ...history]);
-      fetchPayments(); // Refresh to get latest status
-      setSenderName('');
-      setBankAccount('');
-      setBankName('');
-        setAmount('');
     } catch (err) {
       alert(err.message);
     } finally {
@@ -73,10 +67,16 @@ export default function App() {
     <div className="page-shell">
       <header className="hero">
         <div>
-          <span className="eyebrow">Hệ thống điều phối chuyển khoản ngân hàng bảo mật</span>
-          <h1>Nền tảng thanh toán SePay với VA động, QR hết hạn và đối soát giao dịch.</h1>
+          <span className="eyebrow">
+            Hệ thống điều phối chuyển khoản ngân hàng bảo mật
+          </span>
+          <h1>
+            Nền tảng thanh toán SePay với VA động, QR hết hạn và đối soát giao dịch.
+          </h1>
           <p>
-            Luồng thanh toán được thiết kế sẵn cho môi trường thực tế: Tài khoản ảo riêng theo từng đơn hàng tùy biến tên người nhận, đếm ngược 15/30 phút, webhook xác thực và lưu vết đầy đủ payload phục vụ đối soát.
+            Luồng thanh toán được thiết kế sẵn cho môi trường thực tế: Tài khoản
+            ảo riêng theo từng đơn hàng tùy biến tên người nhận, đếm ngược 15/30
+            phút, webhook xác thực và lưu vết đầy đủ payload phục vụ đối soát.
           </p>
         </div>
       </header>
@@ -126,11 +126,10 @@ export default function App() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                placeholder="Nhập số tiền cần chuyển (ví dụ: 100000)"
+                placeholder="Nhập số tiền cần chuyển"
                 required
               />
             </label>
-
 
             <button type="submit" className="btn-primary" disabled={loading}>
               {loading ? 'Đang xử lý...' : 'Tạo phiếu thanh toán'}
@@ -141,7 +140,9 @@ export default function App() {
         <section className="card summary-card">
           <div className="small-label">Phiên thanh toán</div>
           {!payment ? (
-            <div className="summary-placeholder">Chưa có phiên nào được tạo.</div>
+            <div className="summary-placeholder">
+              Chưa có phiên nào được tạo.
+            </div>
           ) : (
             <div className="summary-detail">
               <div>
@@ -153,20 +154,15 @@ export default function App() {
               <div>
                 <strong>Tên ngân hàng:</strong> <span>{payment.bankName}</span>
               </div>
-                <div>
-                <strong>Số tiền:</strong> <span>{payment.amount.toLocaleString()} VND</span>
+              <div>
+                <strong>Số tiền:</strong>{' '}
+                <span>{payment.amount.toLocaleString()} VND</span>
               </div>
-              
+
               {qrUrl && (
                 <div className="qr-code-section">
                   <strong>Mã QR:</strong>
-                  {/* <a href={qrUrl} target="_blank" rel="noopener noreferrer" className="qr-code-link"> */}
-                    <img 
-                      src={qrUrl} 
-                      alt="QR Code" 
-                      className="qr-code-img"
-                    />
-                  {/* </a> */}
+                  <TingeeQR qrCode={qrUrl} size={200} />
                   <small className="qr-hint">Nhấn để xem QR code trực tuyến</small>
                 </div>
               )}
@@ -199,7 +195,7 @@ export default function App() {
             <tbody>
               {history.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="empty-row">
+                  <td colSpan="7" className="empty-row">
                     Chưa có phiên nào được tạo.
                   </td>
                 </tr>
@@ -212,7 +208,11 @@ export default function App() {
                     <td>{item.transferContent}</td>
                     <td>{item.bankName}</td>
                     <td>{item.amount.toLocaleString()} VND</td>
-                    <td className={`status-${item.status === 'Đã thanh toán' ? 'paid' : 'pending'}`}>
+                    <td
+                      className={`status-${
+                        item.status === 'Đã thanh toán' ? 'paid' : 'pending'
+                      }`}
+                    >
                       {item.status}
                     </td>
                   </tr>
