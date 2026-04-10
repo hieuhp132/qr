@@ -258,7 +258,7 @@ export default function App() {
 
         <section className="card summary-card">
           {!payment ? (
-            <div>Chưa có phiên</div>
+            <div>Chưa có phiên giao dịch nào được tạo.</div>
           ) : (
             <>
               <div><strong>Tên chủ tài khoản:</strong> {payment.senderName}</div>
