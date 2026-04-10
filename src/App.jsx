@@ -9,33 +9,24 @@ function TingeeQR({ qrCode, size = 256 }) {
 
 // ================= VIETNAM BANK LIST =================
 const VIETNAM_BANKS = [
-  "VIETCOMEBANK",
-  "BIDV",
-  "VIETINBANK",
-  "AGRIBANK",
-  "MBBank",
-  "TECHCOMBANK",
-  "ACB",
-  "VPBANK",
-  "TPBANK",
-  "SACOMBANK",
-  "SHB",
-  "HDBANK",
-  "OCB",
-  "EXIMBANK",
-  "MSB",
-  "SEABANK",
-  "NAMABANK",
-  "VIB",
-  "PVCOMBANK",
-  "KIENLONGBANK",
-  "ABBANK",
-  "NCB",
-  "SAIGONBANK",
-  "BAOVIETBANK",
-  "CBBANK",
-  "VRB",
-  "PUBLICBANKVN"
+  { label: "Vietcombank", value: "VCB" },
+  { label: "BIDV", value: "BIDV" },
+  { label: "VietinBank", value: "VTB" },
+  { label: "Agribank", value: "AGRB" },
+  { label: "MB Bank", value: "MBB" },
+  { label: "Techcombank", value: "TCB" },
+  { label: "ACB", value: "ACB" },
+  { label: "VPBank", value: "VPB" },
+  { label: "TPBank", value: "TPB" },
+  { label: "Sacombank", value: "SCB" },
+  { label: "HDBank", value: "HB" },
+  { label: "OCB", value: "OCB" },
+  { label: "Eximbank", value: "EB" },
+  { label: "MSB", value: "MSB" },
+  { label: "SeABank", value: "SB" },
+  { label: "Nam A Bank", value: "NAB" },
+  { label: "VIB", value: "VIB" },
+  { label: "PVCombank", value: "PVB" },
 ];
 
 // ================= CLEAN & VALIDATE =================
@@ -157,7 +148,7 @@ export default function App() {
           amount: Number(amount),
           senderName: cleanName,
           bankAccount: cleanAcc,
-          bankName
+          bankName: bankName.value // 🔥 gửi value
         }),
       });
 
@@ -200,7 +191,7 @@ export default function App() {
               <input
                 value={senderName}
                 onChange={(e) => setSenderName(e.target.value)}
-                placeholder="NGUYEN VAN A"
+                placeholder="..."
                 required
               />
             </label>
@@ -233,8 +224,33 @@ export default function App() {
               />
             </label>
 
-            <button disabled={loading}>
-              {loading ? 'Đang xử lý...' : 'Tạo QR'}
+            <button
+              disabled={loading}
+              style={{
+                padding: "12px",
+                borderRadius: 10,
+                border: "none",
+                fontWeight: 600,
+                fontSize: 16,
+                color: "#fff",
+                background: loading
+                  ? "#999"
+                  : "linear-gradient(135deg, #667eea, #764ba2)",
+                cursor: loading ? "not-allowed" : "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: loading
+                  ? "none"
+                  : "0 6px 16px rgba(102,126,234,0.4)",
+              }}
+            >
+              {loading ? (
+                <span style={{ display: "flex", gap: 8, alignItems: "center", justifyContent: "center" }}>
+                  <span className="spinner" />
+                  Đang tạo QR...
+                </span>
+              ) : (
+                "Tạo QR ngay"
+              )}
             </button>
 
           </form>
@@ -245,12 +261,31 @@ export default function App() {
             <div>Chưa có phiên</div>
           ) : (
             <>
-              <div>{payment.senderName}</div>
-              <div>{payment.bankAccount}</div>
-              <div>{payment.bankName}</div>
-              <div>{payment.amount.toLocaleString()} VND</div>
+              <div><strong>Tên chủ tài khoản:</strong> {payment.senderName}</div>
+              <div><strong>Số tài khoản:</strong> {payment.bankAccount}</div>
+              <div><strong>Tên ngân hàng:</strong> {payment.bankName}</div>
+              <div><strong>Số tiền:</strong> {payment.amount.toLocaleString()} VND</div>
 
               {qrUrl && <TingeeQR qrCode={qrUrl} size={200} />}
+
+
+
+              <i
+                style={{
+                  color: "#d32f2f",
+                  textDecoration: "underline",
+                  textDecorationStyle: "dashed",
+                  textUnderlineOffset: "5px",
+                  lineHeight: 1.6,
+                  display: "block",
+                  marginTop: 10
+                }}
+              >
+                Điền đúng một chút, an tâm cả quá trình ✨
+                Check lại info trước khi chuyển để mọi thứ chạy mượt như flow,
+                và tụi mình luôn ở đây nếu bạn cần hỗ trợ 💜
+              </i>
+
             </>
           )}
         </section>
@@ -267,7 +302,7 @@ function BankDropdown({ value, onChange }) {
 
   const filteredBanks = useMemo(() => {
     return VIETNAM_BANKS.filter(bank =>
-      bank.toLowerCase().includes(search.toLowerCase())
+      bank.label.toLowerCase().includes(search.toLowerCase())
     );
   }, [search]);
 
@@ -285,7 +320,7 @@ function BankDropdown({ value, onChange }) {
           background: "#fff"
         }}
       >
-        {value || "Chọn ngân hàng"}
+        {value?.label || "Chọn ngân hàng"}
       </div>
 
       {/* DROPDOWN */}
@@ -326,7 +361,7 @@ function BankDropdown({ value, onChange }) {
             <div
               key={idx}
               onClick={() => {
-                onChange(bank);
+                onChange(bank); // gửi cả object
                 setOpen(false);
                 setSearch("");
               }}
@@ -336,7 +371,7 @@ function BankDropdown({ value, onChange }) {
                 borderBottom: "1px solid #f5f5f5"
               }}
             >
-              {bank}
+              {bank.label}
             </div>
           ))}
 
