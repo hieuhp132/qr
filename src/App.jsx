@@ -188,7 +188,7 @@ export default function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/sepay/makeQrCode`, {
+      const response = await fetch(`${API_BASE}/local/sepay/makeQrCode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
