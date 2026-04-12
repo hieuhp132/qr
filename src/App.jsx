@@ -8,147 +8,194 @@ function TingeeQR({ qrCode, size = 256 }) {
 }
 
 // ================= VIETNAM BANK LIST =================
-const VIETNAM_BANKS = [
-  { label: "Vietcombank", value: "VCB" },
-  { label: "BIDV", value: "BIDV" },
-  { label: "VietinBank", value: "VTB" },
-  { label: "Agribank", value: "AGRB" },
-  { label: "MB Bank", value: "MBB" },
-  { label: "Techcombank", value: "TCB" },
-  { label: "ACB", value: "ACB" },
-  { label: "VPBank", value: "VPB" },
-  { label: "TPBank", value: "TPB" },
-  { label: "Sacombank", value: "SCB" },
-  { label: "HDBank", value: "HB" },
-  { label: "OCB", value: "OCB" },
-  { label: "Eximbank", value: "EB" },
-  { label: "MSB", value: "MSB" },
-  { label: "SeABank", value: "SB" },
-  { label: "Nam A Bank", value: "NAB" },
-  { label: "VIB", value: "VIB" },
-  { label: "PVCombank", value: "PVB" },
-];
+// const VIETNAM_BANKS = [
+//   { label: "Vietcombank", value: "VCB" },
+//   { label: "BIDV", value: "BIDV" },
+//   { label: "VietinBank", value: "VTB" },
+//   { label: "Agribank", value: "AGRB" },
+//   { label: "MB Bank", value: "MBB" },
+//   { label: "Techcombank", value: "TCB" },
+//   { label: "ACB", value: "ACB" },
+//   { label: "VPBank", value: "VPB" },
+//   { label: "TPBank", value: "TPB" },
+//   { label: "Sacombank", value: "SCB" },
+//   { label: "HDBank", value: "HB" },
+//   { label: "OCB", value: "OCB" },
+//   { label: "Eximbank", value: "EB" },
+//   { label: "MSB", value: "MSB" },
+//   { label: "SeABank", value: "SB" },
+//   { label: "Nam A Bank", value: "NAB" },
+//   { label: "VIB", value: "VIB" },
+//   { label: "PVCombank", value: "PVB" },
+// ];
 
 // ================= CLEAN & VALIDATE =================
-function cleanSenderName(name) {
-  if (!name) return '';
+// function cleanSenderName(name) {
+//   if (!name) return '';
 
-  return name
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z\s]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toUpperCase();
-}
+//   return name
+//     .normalize('NFD')
+//     .replace(/[\u0300-\u036f]/g, '')
+//     .replace(/[^a-zA-Z\s]/g, '')
+//     .replace(/\s+/g, ' ')
+//     .trim()
+//     .toUpperCase();
+// }
 
-function isValidName(name) {
-  if (!name) return false;
+// function isValidName(name) {
+//   if (!name) return false;
 
-  const words = name.split(' ').filter(Boolean);
+//   const words = name.split(' ').filter(Boolean);
 
-  // 2–5 từ là hợp lý
-  if (words.length < 2 || words.length > 5) return false;
+//   // 2–5 từ là hợp lý
+//   if (words.length < 2 || words.length > 5) return false;
 
-  // chặn noise spam
-  const noise = ['TEST', 'ABC', 'XYZ', 'QWE', 'ASD', 'ZXC', 'AAAA', 'BBBB'];
+//   // chặn noise spam
+//   const noise = ['TEST', 'ABC', 'XYZ', 'QWE', 'ASD', 'ZXC', 'AAAA', 'BBBB'];
 
-  // mỗi từ hợp lệ:
-  const isValidWord = (w) => {
-    // cho phép:
-    // - 1 ký tự (A, B, C...)
-    // - hoặc >= 2 ký tự chữ
-    return /^[A-Z]$/.test(w) || /^[A-Z]{2,}$/.test(w);
-  };
+//   // mỗi từ hợp lệ:
+//   const isValidWord = (w) => {
+//     // cho phép:
+//     // - 1 ký tự (A, B, C...)
+//     // - hoặc >= 2 ký tự chữ
+//     return /^[A-Z]$/.test(w) || /^[A-Z]{2,}$/.test(w);
+//   };
 
-  // check word validity
-  if (!words.every(isValidWord)) return false;
+//   // check word validity
+//   if (!words.every(isValidWord)) return false;
 
-  // check noise words
-  if (words.some(w => noise.includes(w))) return false;
+//   // check noise words
+//   if (words.some(w => noise.includes(w))) return false;
 
-  // tránh toàn chữ giống nhau (AAAA AAAA)
-  const unique = new Set(words);
-  if (unique.size === 1) return false;
+//   // tránh toàn chữ giống nhau (AAAA AAAA)
+//   const unique = new Set(words);
+//   if (unique.size === 1) return false;
 
-  return true;
-}
+//   return true;
+// }
 
-function cleanBankAccount(acc) {
-  return acc.replace(/\D/g, '');
-}
+// function cleanBankAccount(acc) {
+//   return acc.replace(/\D/g, '');
+// }
 
-function isValidAccount(acc) {
-  return /^\d{6,20}$/.test(acc);
-}
+// function isValidAccount(acc) {
+//   return /^\d{6,20}$/.test(acc);
+// }
 
 // ================= APP =================
 export default function App() {
-  const [senderName, setSenderName] = useState('');
-  const [bankAccount, setBankAccount] = useState('');
-  const [bankName, setBankName] = useState('');
-  const [amount, setAmount] = useState('');
+  // const [senderName, setSenderName] = useState('');
   const [payment, setPayment] = useState(null);
+  const [amount, setAmount] = useState('');
   const [qrUrl, setQrUrl] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(false);
 
-  const API_BASE = 'https://api.alowork.com';
+  const [loading, setLoading] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [expired, setExpired] = useState(false);
+  // const API_BASE = 'https://api.alowork.com';
+  const API_BASE = 'http://localhost:3000';
+  // useEffect(() => {
+  //   fetchPayments();
+  // }, []);
+
+  // const fetchPayments = async () => {
+  //   try {
+  //     const response = await fetch(`${API_BASE}/tingee/payments`);
+  //     if (response.ok) {
+  //       const data = await response.json();
+  //       setHistory(data.payments);
+  //     }
+  //   } catch (err) {
+  //     console.error('Failed to fetch payments:', err);
+  //   }
+  // };
+
+  // ===== COUNTDOWN =====
+  useEffect(() => {
+    if (!payment?.expiredAt) return;
+
+    setExpired(false);
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const expiredTime = new Date(payment.expiredAt).getTime();
+
+      const diff = Math.max(0, Math.floor((expiredTime - now) / 1000));
+
+      setTimeLeft(diff);
+
+      if (diff <= 0) {
+        setExpired(true);
+        clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [payment]);
 
   useEffect(() => {
-    fetchPayments();
-  }, []);
+    const interval = setInterval(async () => {
+      const res = await fetch(`${API_BASE}/sepay/payments`);
+      const data = await res.json();
 
-  const fetchPayments = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/tingee/payments`);
-      if (response.ok) {
-        const data = await response.json();
-        setHistory(data.payments);
+      const current = data.payments.find(p =>
+        payment && p.id === payment.id
+      );
+
+      if (!current) {
+        setPayment(null);
+        setQrUrl(null);
+        setExpired(true);
       }
-    } catch (err) {
-      console.error('Failed to fetch payments:', err);
-    }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [payment]);
+
+  const formatTime = (seconds) => {
+    const m = String(Math.floor(seconds / 60)).padStart(2, '0');
+    const s = String(seconds % 60).padStart(2, '0');
+    return `${m}:${s}`;
   };
 
   // ================= HANDLE SUBMIT =================
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const cleanName = cleanSenderName(senderName);
-    const cleanAcc = cleanBankAccount(bankAccount);
+    // const cleanName = cleanSenderName(senderName);
+    // const cleanAcc = cleanBankAccount(bankAccount);
 
-    if (!isValidName(cleanName)) {
-      alert('Tên không hợp lệ (2-5 từ, không ký tự lạ)');
-      return;
-    }
+    // if (!isValidName(cleanName)) {
+    //   alert('Tên không hợp lệ (2-5 từ, không ký tự lạ)');
+    //   return;
+    // }
 
-    if (!isValidAccount(cleanAcc)) {
-      alert('Số tài khoản không hợp lệ');
-      return;
-    }
+    // if (!isValidAccount(cleanAcc)) {
+    //   alert('Số tài khoản không hợp lệ');
+    //   return;
+    // }
 
-    if (!bankName) {
-      alert('Vui lòng chọn ngân hàng');
-      return;
-    }
+    // if (!bankName) {
+    //   alert('Vui lòng chọn ngân hàng');
+    //   return;
+    // }
 
-    if (!amount || Number(amount) <= 0) {
-      alert('Số tiền không hợp lệ');
-      return;
-    }
+    // if (!amount || Number(amount) <= 0) {
+    //   alert('Số tiền không hợp lệ');
+    //   return;
+    // }
 
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/tingee/makeQrCode`, {
+      const response = await fetch(`${API_BASE}/sepay/makeQrCode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: Number(amount),
-          senderName: cleanName,
-          bankAccount: cleanAcc,
-          bankName: bankName.value // 🔥 gửi value
+          // senderName: cleanName,
+          // bankAccount: cleanAcc,
+          // bankName: bankName.value // 🔥 gửi value
         }),
       });
 
@@ -160,9 +207,10 @@ export default function App() {
       const p = await response.json();
       const newPayment = p.data;
 
+
       setPayment(newPayment);
       setQrUrl(String(newPayment.qrCode));
-      setHistory([newPayment, ...history]);
+      // setHistory([newPayment, ...history]);
 
     } catch (err) {
       alert(err.message);
@@ -176,7 +224,7 @@ export default function App() {
     <div className="page-shell">
       <header className="hero">
         <span className="eyebrow">
-          Hệ thống QR chuyển khoản ngân hàng
+          Hệ thống tạo QR động thời gian thực chuyển khoản ngân hàng
         </span>
       </header>
 
@@ -186,7 +234,7 @@ export default function App() {
 
           <form onSubmit={handleSubmit} className="form-grid">
 
-            <label>
+            {/* <label>
               <span>Tên người chuyển (giống tên tài khoản ngân hàng)</span>
               <input
                 value={senderName}
@@ -212,7 +260,7 @@ export default function App() {
                 value={bankName}
                 onChange={setBankName}
               />
-            </label>
+            </label> */}
 
             <label>
               <span>Số tiền</span>
@@ -220,7 +268,7 @@ export default function App() {
                 type="number"
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
-                required
+
               />
             </label>
 
@@ -261,16 +309,24 @@ export default function App() {
             <div>Chưa có phiên giao dịch nào được tạo.</div>
           ) : (
             <>
-              <div><strong>Tên chủ tài khoản:</strong> {payment.senderName}</div>
+              {/* <div><strong>Tên chủ tài khoản:</strong> {payment.senderName}</div>
               <div><strong>Số tài khoản:</strong> {payment.bankAccount}</div>
-              <div><strong>Tên ngân hàng:</strong> {payment.bankName}</div>
+              <div><strong>Tên ngân hàng:</strong> {payment.bankName}</div> */}
               <div><strong>Số tiền:</strong> {payment.amount.toLocaleString()} VND</div>
+              <div><strong>Mã đơn hàng:</strong> {payment.orderCode}</div>
+              <div><strong>Số tài khoản:</strong> {payment.vaNumber}</div>
+              <div><strong>Tên ngân hàng:</strong> {payment.bankName}</div>
 
-              {qrUrl && <TingeeQR qrCode={qrUrl} size={200} />}
+              {qrUrl && <img src={qrUrl} width={200} />}
 
-
-
-              <i
+              <div style={{ marginTop: 10 }}>
+                {expired ? (
+                  <span style={{ color: 'red' }}>Hết hạn</span>
+                ) : (
+                  <span>Còn lại: {formatTime(timeLeft)}</span>
+                )}
+              </div>
+              {/* <i
                 style={{
                   color: "#d32f2f",
                   textDecoration: "underline",
@@ -284,7 +340,7 @@ export default function App() {
                 Điền đúng một chút, an tâm cả quá trình ✨
                 Check lại info trước khi chuyển để mọi thứ chạy mượt như flow,
                 và tụi mình luôn ở đây nếu bạn cần hỗ trợ 💜
-              </i>
+              </i> */}
 
             </>
           )}
