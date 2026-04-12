@@ -92,8 +92,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [expired, setExpired] = useState(false);
-  // const API_BASE = 'https://api.alowork.com';
-  const API_BASE = 'http://localhost:3000';
+  const API_BASE = 'https://api.alowork.com';
+  // const API_BASE = 'http://localhost:3000';
   // useEffect(() => {
   //   fetchPayments();
   // }, []);
