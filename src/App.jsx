@@ -135,7 +135,7 @@ export default function App() {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const res = await fetch(`${API_BASE}/sepay/payments`);
+      const res = await fetch(`${API_BASE}/local/sepay/payments`);
       const data = await res.json();
 
       const current = data.payments.find(p =>
