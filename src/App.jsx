@@ -92,7 +92,8 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [expired, setExpired] = useState(false);
-  const API_BASE = 'https://api.alowork.com';
+  // const API_BASE = 'https://api.alowork.com';
+  const API_BASE_TINGEE = 'http://localhost:3000/tingee';
   // const API_BASE = 'http://localhost:3000';
   // useEffect(() => {
   //   fetchPayments();
@@ -135,7 +136,7 @@ export default function App() {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const res = await fetch(`${API_BASE}/local/sepay/payments`);
+      const res = await fetch(`${API_BASE_TINGEE}/payments`);
       const data = await res.json();
 
       const current = data.payments.find(p =>
@@ -188,7 +189,7 @@ export default function App() {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/local/sepay/makeQrCode`, {
+      const response = await fetch(`${API_BASE_TINGEE}/makeQrCode`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -314,10 +315,14 @@ export default function App() {
               <div><strong>Tên ngân hàng:</strong> {payment.bankName}</div> */}
               <div><strong>Số tiền:</strong> {payment.amount.toLocaleString()} VND</div>
               <div><strong>Mã đơn hàng:</strong> {payment.orderCode}</div>
-              <div><strong>Số tài khoản:</strong> {payment.vaNumber}</div>
+              <div><strong>Số tài khoản:</strong> {payment.vaAccount}</div>
               <div><strong>Tên ngân hàng:</strong> {payment.bankName}</div>
 
-              {qrUrl && <img src={qrUrl} width={200} />}
+              {/* {qrUrl && <img src={qrUrl} width={200} />} */}
+
+              <TingeeQR
+                qrCode={payment.qrCode}
+              />
 
               <div style={{ marginTop: 10 }}>
                 {expired ? (
