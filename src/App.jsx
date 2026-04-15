@@ -93,7 +93,7 @@ export default function App() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [expired, setExpired] = useState(false);
   // const API_BASE = 'https://api.alowork.com';
-  const API_BASE_TINGEE = 'http://localhost:3000/tingee';
+  const API_BASE_TINGEE = 'http://api.alowork.com/tingee';
   // const API_BASE = 'http://localhost:3000';
   // useEffect(() => {
   //   fetchPayments();
