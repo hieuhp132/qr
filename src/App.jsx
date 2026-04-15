@@ -119,9 +119,11 @@ export default function App() {
 
     const interval = setInterval(() => {
       const now = Date.now();
-      const expiredTime = new Date(payment.expiredAt).getTime();
 
-      const diff = Math.max(0, Math.floor((expiredTime - now) / 1000));
+      const diff = Math.max(
+        0,
+        Math.floor((payment.expiredAt - now) / 1000)
+      );
 
       setTimeLeft(diff);
 
@@ -209,7 +211,15 @@ export default function App() {
       const newPayment = p.data;
 
 
-      setPayment(newPayment);
+
+      // 🔥 thêm dòng này
+      const expiredAt = Date.now() + newPayment.expireInMinute * 60 * 1000;
+
+      setPayment({
+        ...newPayment,
+        expiredAt,
+      });
+
       setQrUrl(String(newPayment.qrCode));
       // setHistory([newPayment, ...history]);
 
