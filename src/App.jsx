@@ -5,7 +5,19 @@ function TingeeQR({ qrCode, size = 256 }) {
   if (!qrCode) return null;
   return <QRCode value={qrCode} size={size} />;
 }
+const formatDateTime = (timestamp) => {
+  const d = new Date(timestamp);
 
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
+
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+
+  return `${hours}:${minutes}:${seconds} ${day}/${month}/${year}`;
+};
 export default function App() {
   const [payment, setPayment] = useState(null);
   const [amount, setAmount] = useState('');
@@ -112,7 +124,13 @@ export default function App() {
             {expired ? (
               <span style={{ color: 'red' }}>Hết hạn</span>
             ) : (
-              <span>Còn lại: {formatTime(timeLeft)}</span>
+              <>
+                <div>Còn lại: {formatTime(timeLeft)}</div>
+
+                <div style={{ fontSize: 12, color: '#666', marginTop: 4 }}>
+                  Hết hạn lúc: {formatDateTime(payment.expiredAt)}
+                </div>
+              </>
             )}
           </div>
         </div>
